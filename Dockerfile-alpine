@@ -1,25 +1,24 @@
-FROM php:8.4
+FROM php:8.4-alpine
 
-RUN apt-get update && apt-get install -y libpq-dev libevent-dev libzip-dev libbz2-dev libffi-dev libyaml-dev libjudy-dev ${PHPIZE_DEPS} \
+RUN apk add --no-cache linux-headers openssl-dev libevent-dev libzip-dev libbz2 libffi-dev pcre-dev postgresql-dev yaml-dev ${PHPIZE_DEPS} \
   && docker-php-ext-configure pcntl --enable-pcntl \
 #  && docker-php-ext-configure pgsql -with-pgsql=/usr/local/pgsql \
   && docker-php-ext-install pcntl zip bz2 sockets pgsql pdo_pgsql ffi \
-  && pecl install event ds inotify apcu memprof yaml \
+  && pecl install event ds inotify apcu yaml \
   && docker-php-ext-enable ds \
   && docker-php-ext-enable inotify \
   && docker-php-ext-enable apcu \
-    && docker-php-ext-enable yaml \
-  && docker-php-ext-enable memprof \
+  && docker-php-ext-enable yaml \
   && docker-php-ext-enable --ini-name zz-event.ini event \
-  && apt remove -y libpcre3-dev  ${PHPIZE_DEPS} \
+  && apk del pcre-dev ${PHPIZE_DEPS} \
   && mkdir /app
-# COPY . /app
+#COPY . /app
 WORKDIR /app
 
 COPY --from=composer:latest /usr/bin/composer /usr/local/bin/composer
-# RUN composer install --no-interaction --no-plugins --no-scripts --no-dev --prefer-dist
-# RUN php artisan package:discover --ansi
-# EXPOSE 3380
+#RUN composer install --no-interaction --no-plugins --no-scripts --no-dev --prefer-dist
+#RUN php artisan package:discover --ansi
+EXPOSE 3380
 CMD [ "php", "./start.php" ]
 
 # mount your php application into /app folder with start.php entry point
